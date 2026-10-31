@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "MirageForge: Open research platform for visual illusion discovery"
+authors:
+  - name: "MirageForge Contributors"
+version: "0.1.0"
+date-released: "2026-10-31"
+url: "https://github.com/mirageforge/mirageforge"
+license: MIT
+keywords:
+  - "visual perception"
+  - "illusions"
+  - "psychophysics"
+  - "active learning"
+  - "computer vision"
+type: software
