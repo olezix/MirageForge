@@ -12,5 +12,5 @@ No medical or diagnostic claims are made.
 """
 
 __version__ = "0.1.0"
-__author__ = "MirageForge Contributors"
+__author__ = "olezix"
 __license__ = "MIT"
