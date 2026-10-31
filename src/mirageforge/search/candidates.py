@@ -4,7 +4,6 @@ Candidate stimulus generation and mutation.
 Generates diverse candidate stimuli for active search and optimization.
 """
 
-from typing import Optional
 
 import numpy as np
 
@@ -21,50 +20,50 @@ from mirageforge.stimuli.generators import (
 class CandidateGenerator:
     """
     Generates candidate stimuli for active search.
-    
+
     Supports random generation and mutation of existing candidates
     to explore the stimulus space efficiently.
     """
-    
+
     def __init__(self, seed: int = 42):
         """
         Initialize candidate generator.
-        
+
         Args:
             seed: Random seed for reproducibility
         """
         self.seed = seed
         self.rng = np.random.default_rng(seed)
-    
+
     def generate_random(
         self,
         count: int,
-        families: Optional[list[StimulusFamily]] = None,
+        families: list[StimulusFamily] | None = None,
     ) -> list[StimulusSpec]:
         """
         Generate random candidate stimuli.
-        
+
         Args:
             count: Number of candidates to generate
             families: List of families to sample from (default: all)
-            
+
         Returns:
             List of candidate StimulusSpec objects
         """
         if families is None:
             families = list(StimulusFamily)
-        
+
         candidates: list[StimulusSpec] = []
-        
+
         # Distribute candidates across families
         per_family = max(1, count // len(families))
         remainder = count - per_family * len(families)
-        
+
         base_seed = self.seed
-        
+
         for i, family in enumerate(families):
             family_count = per_family + (1 if i < remainder else 0)
-            
+
             if family == StimulusFamily.SIZE_CONTEXT:
                 family_candidates = generate_size_context_stimuli(
                     count=family_count,
@@ -92,12 +91,12 @@ class CandidateGenerator:
                 )
             else:
                 continue
-            
+
             candidates.extend(family_candidates)
             base_seed += family_count + 1000
-        
+
         return candidates[:count]
-    
+
     def mutate(
         self,
         candidates: list[StimulusSpec],
@@ -106,35 +105,35 @@ class CandidateGenerator:
     ) -> list[StimulusSpec]:
         """
         Mutate existing candidates to explore nearby parameter space.
-        
+
         Args:
             candidates: List of candidates to mutate
             mutation_rate: Probability of mutating each parameter
             num_mutations: Number of mutations per candidate
-            
+
         Returns:
             List of mutated candidates
         """
         mutated: list[StimulusSpec] = []
-        
+
         for candidate in candidates:
             for _ in range(num_mutations):
                 mutated_candidate = self._mutate_single(candidate, mutation_rate)
                 if mutated_candidate:
                     mutated.append(mutated_candidate)
-        
+
         return mutated
-    
+
     def _mutate_single(
         self,
         candidate: StimulusSpec,
         mutation_rate: float,
-    ) -> Optional[StimulusSpec]:
+    ) -> StimulusSpec | None:
         """Mutate a single candidate."""
         try:
             # Get current parameters
             params_dict = candidate.get_param_dict()
-            
+
             # Mutate parameters
             mutated_params = {}
             for key, value in params_dict.items():
@@ -142,13 +141,13 @@ class CandidateGenerator:
                     mutated_params[key] = self._mutate_parameter(key, value, candidate.family)
                 else:
                     mutated_params[key] = value
-            
+
             # Create new spec with mutated parameters
             new_seed = candidate.seed + int(self.rng.integers(1, 10000))
-            
+
             # Import here to avoid circular dependency
             from mirageforge.stimuli.dsl import create_stimulus_spec
-            
+
             new_spec = create_stimulus_spec(
                 family=candidate.family,
                 params=mutated_params,
@@ -156,13 +155,13 @@ class CandidateGenerator:
                 seed=new_seed,
                 safety=candidate.get_safety_dict(),
             )
-            
+
             return new_spec
-            
+
         except Exception:
             # Mutation failed (e.g., validation error), skip
             return None
-    
+
     def _mutate_parameter(self, key: str, value: any, family: StimulusFamily) -> any:
         """Mutate a single parameter value."""
         if isinstance(value, (int, float)):
@@ -184,16 +183,16 @@ class CandidateGenerator:
 def generate_candidates(
     count: int,
     seed: int = 42,
-    families: Optional[list[StimulusFamily]] = None,
+    families: list[StimulusFamily] | None = None,
 ) -> list[StimulusSpec]:
     """
     Convenience function to generate random candidates.
-    
+
     Args:
         count: Number of candidates
         seed: Random seed
         families: Optional list of families
-        
+
     Returns:
         List of candidate stimuli
     """
@@ -209,13 +208,13 @@ def mutate_candidates(
 ) -> list[StimulusSpec]:
     """
     Convenience function to mutate candidates.
-    
+
     Args:
         candidates: Candidates to mutate
         seed: Random seed
         mutation_rate: Mutation probability
         num_mutations: Mutations per candidate
-        
+
     Returns:
         List of mutated candidates
     """

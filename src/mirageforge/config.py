@@ -8,7 +8,6 @@ security-sensitive settings.
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,7 +39,7 @@ class Settings(BaseSettings):
     )
 
     # Admin
-    admin_token: Optional[str] = Field(
+    admin_token: str | None = Field(
         default=None,
         description="Admin token for protected endpoints. If empty, admin endpoints are disabled.",
     )
@@ -114,7 +113,7 @@ class Settings(BaseSettings):
         return token == self.admin_token
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()
