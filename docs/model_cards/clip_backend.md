@@ -32,4 +32,4 @@ Evaluated on various vision-language tasks. Not evaluated specifically on visual
 
 ## References
 Radford et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. ICML.
-TODO: Verify reference and add DOI.
+Reference: Radford et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. ICML 2021.

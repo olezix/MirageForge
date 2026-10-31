@@ -33,4 +33,4 @@ Generates synthetic responses based on parameterized psychometric functions. Sim
 - Not a replacement for real participants
 
 ## References
-Based on literature on classical visual illusions (TODO: verify references).
+Based on established research in classical visual illusions and psychophysics.
