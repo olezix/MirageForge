@@ -8,12 +8,12 @@ Ensures all stimuli meet safety requirements:
 - No photosensitive triggers
 """
 
-
 from mirageforge.stimuli.dsl import SafetyFlags, StimulusSpec
 
 
 class SafetyValidationError(Exception):
     """Raised when a stimulus fails safety validation."""
+
     pass
 
 
@@ -42,8 +42,7 @@ def validate_stimulus_safety(spec: StimulusSpec) -> tuple[bool, list[str]]:
     # Hard constraint: No fast motion in MVP
     if spec.safety.has_fast_motion:
         raise SafetyValidationError(
-            "Fast motion stimuli are not allowed in MVP. "
-            "Only static images are supported."
+            "Fast motion stimuli are not allowed in MVP. Only static images are supported."
         )
 
     # Soft warnings for high contrast
@@ -94,26 +93,20 @@ def _validate_family_safety(spec: StimulusSpec) -> list[str]:
     if spec.family == StimulusFamily.CROWDING and isinstance(spec.params, CrowdingParams):
         # Warn for very small targets
         if spec.params.target_size < 30:
-            warnings.append(
-                "Very small target size may cause eye strain."
-            )
+            warnings.append("Very small target size may cause eye strain.")
 
     # Check size context stimuli
     if spec.family == StimulusFamily.SIZE_CONTEXT and isinstance(spec.params, SizeContextParams):
         # Warn for extreme size ratios
         size_ratio = spec.params.context_size / spec.params.target_size
         if size_ratio > 5.0 or size_ratio < 0.2:
-            warnings.append(
-                "Extreme size ratio between target and context may cause discomfort."
-            )
+            warnings.append("Extreme size ratio between target and context may cause discomfort.")
 
     # Check line context stimuli
     if spec.family == StimulusFamily.LINE_CONTEXT and isinstance(spec.params, LineContextParams):
         # Warn for very thin lines
         if spec.params.line_width < 2:
-            warnings.append(
-                "Very thin lines may be difficult to see and cause eye strain."
-            )
+            warnings.append("Very thin lines may be difficult to see and cause eye strain.")
 
     return warnings
 
@@ -142,13 +135,17 @@ def generate_safety_flags(spec: StimulusSpec) -> SafetyFlags:
         lum_diff = abs(spec.params.target_luminance - spec.params.surround_luminance)
         if lum_diff > 0.8:
             has_high_contrast = True
-            warning_text = "This stimulus has high contrast. Look away if you experience discomfort."
+            warning_text = (
+                "This stimulus has high contrast. Look away if you experience discomfort."
+            )
 
     # Check for high-frequency gratings
     if spec.family == StimulusFamily.GRATING and isinstance(spec.params, GratingParams):
         if spec.params.spatial_frequency > 8.0 and spec.params.contrast > 0.7:
             has_high_contrast = True
-            warning_text = "This stimulus contains fine patterns. Look away if you experience discomfort."
+            warning_text = (
+                "This stimulus contains fine patterns. Look away if you experience discomfort."
+            )
 
     return SafetyFlags(
         has_flashing=False,  # MVP constraint

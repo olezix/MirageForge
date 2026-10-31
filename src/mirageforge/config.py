@@ -24,7 +24,9 @@ class Settings(BaseSettings):
     )
 
     # Application
-    app_env: str = Field(default="development", description="Environment: development, production, test")
+    app_env: str = Field(
+        default="development", description="Environment: development, production, test"
+    )
     debug: bool = Field(default=True, description="Enable debug mode")
     secret_key: str = Field(
         default="insecure-dev-key-change-in-production",
@@ -50,11 +52,15 @@ class Settings(BaseSettings):
 
     # Experiment
     default_study_id: int = Field(default=1, description="Default study ID for experiments")
-    trials_per_session: int = Field(default=12, ge=1, le=100, description="Number of trials per session")
+    trials_per_session: int = Field(
+        default=12, ge=1, le=100, description="Number of trials per session"
+    )
 
     # ML Models
     enable_clip_backend: bool = Field(default=False, description="Enable CLIP vision backend")
-    clip_model_name: str = Field(default="openai/clip-vit-base-patch32", description="CLIP model name")
+    clip_model_name: str = Field(
+        default="openai/clip-vit-base-patch32", description="CLIP model name"
+    )
 
     # Rate Limiting
     rate_limit_rpm: int = Field(default=100, ge=1, description="Requests per minute per session")
@@ -64,11 +70,17 @@ class Settings(BaseSettings):
         default="csrf-dev-secret-change-in-production",
         description="CSRF secret key",
     )
-    session_cookie_name: str = Field(default="mirageforge_session", description="Session cookie name")
-    session_cookie_secure: bool = Field(default=False, description="Use secure cookies (HTTPS only)")
+    session_cookie_name: str = Field(
+        default="mirageforge_session", description="Session cookie name"
+    )
+    session_cookie_secure: bool = Field(
+        default=False, description="Use secure cookies (HTTPS only)"
+    )
 
     # Paths
-    artifacts_dir: Path = Field(default=Path("artifacts"), description="Directory for generated artifacts")
+    artifacts_dir: Path = Field(
+        default=Path("artifacts"), description="Directory for generated artifacts"
+    )
     data_dir: Path = Field(default=Path("data"), description="Directory for data files")
 
     @field_validator("secret_key")
@@ -77,6 +89,7 @@ class Settings(BaseSettings):
         """Warn if using default secret key in production."""
         if v == "insecure-dev-key-change-in-production":
             import warnings
+
             warnings.warn(
                 "Using default SECRET_KEY. This is insecure for production. "
                 "Set SECRET_KEY environment variable to a random string.",

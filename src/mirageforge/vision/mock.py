@@ -67,6 +67,7 @@ class MockVisionModel(VisionBackend):
         """
         # Convert image to bytes for hashing
         import io
+
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
         image_bytes = buffer.getvalue()
@@ -108,13 +109,15 @@ class MockVisionModel(VisionBackend):
     def get_info(self) -> dict[str, Any]:
         """Get model information."""
         info = super().get_info()
-        info.update({
-            "description": "Mock vision model for testing and demonstration",
-            "limitations": [
-                "Not a real vision model",
-                "Predictions are random but deterministic",
-                "Should not be used for scientific conclusions",
-            ],
-            "use_case": "Testing pipeline, demonstrating interface",
-        })
+        info.update(
+            {
+                "description": "Mock vision model for testing and demonstration",
+                "limitations": [
+                    "Not a real vision model",
+                    "Predictions are random but deterministic",
+                    "Should not be used for scientific conclusions",
+                ],
+                "use_case": "Testing pipeline, demonstrating interface",
+            }
+        )
         return info

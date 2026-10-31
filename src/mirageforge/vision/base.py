@@ -77,9 +77,11 @@ class VisionBackend(ABC):
 
 class VisionBackendError(Exception):
     """Exception raised when a vision backend encounters an error."""
+
     pass
 
 
 class VisionBackendUnavailableError(VisionBackendError):
     """Exception raised when a vision backend is not available."""
+
     pass

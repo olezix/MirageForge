@@ -4,7 +4,6 @@ Candidate stimulus generation and mutation.
 Generates diverse candidate stimuli for active search and optimization.
 """
 
-
 import numpy as np
 
 from mirageforge.stimuli.dsl import StimulusFamily, StimulusSpec
