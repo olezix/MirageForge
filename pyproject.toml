@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "MirageForge Contributors"}
+    {name = "olezix"}
 ]
 keywords = ["vision", "illusions", "perception", "research", "machine-learning"]
 classifiers = [

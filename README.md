@@ -266,7 +266,7 @@ See `CONTRIBUTING.md` for guidelines.
 ```bibtex
 @software{mirageforge2024,
   title = {MirageForge: Open research platform for visual illusion discovery},
-  author = {MirageForge Contributors},
+  author = {olezix},
   year = {2024},
   url = {https://github.com/mirageforge/mirageforge}
 }
