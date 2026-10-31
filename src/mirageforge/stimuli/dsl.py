@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class StimulusFamily(StrEnum):
     """Supported stimulus families."""
+
     SIZE_CONTEXT = "size_context"  # Ebbinghaus-like
     LINE_CONTEXT = "line_context"  # Müller-Lyer/Poggendorff-like
     CONTRAST = "contrast"  # Simultaneous contrast
@@ -22,6 +23,7 @@ class StimulusFamily(StrEnum):
 
 class TaskType(StrEnum):
     """Supported task types."""
+
     TWO_AFC = "2AFC"  # Two-alternative forced choice
     YES_NO = "yes_no"  # Yes/No detection
     SAME_DIFFERENT = "same_different"  # Same/Different judgment
@@ -29,11 +31,14 @@ class TaskType(StrEnum):
 
 class SizeContextParams(BaseModel):
     """Parameters for size context stimuli (Ebbinghaus-like)."""
+
     model_config = ConfigDict(extra="forbid")
 
     target_size: float = Field(..., ge=10, le=200, description="Target circle diameter in pixels")
     context_size: float = Field(..., ge=10, le=300, description="Context circle diameter in pixels")
-    context_distance: float = Field(..., ge=50, le=400, description="Distance from target to context")
+    context_distance: float = Field(
+        ..., ge=50, le=400, description="Distance from target to context"
+    )
     num_context: int = Field(..., ge=3, le=12, description="Number of context circles")
     context_color: str = Field(default="#808080", description="Context circle color")
     target_color: str = Field(default="#000000", description="Target circle color")
@@ -53,6 +58,7 @@ class SizeContextParams(BaseModel):
 
 class LineContextParams(BaseModel):
     """Parameters for line context stimuli (Müller-Lyer/Poggendorff-like)."""
+
     model_config = ConfigDict(extra="forbid")
 
     line_length: float = Field(..., ge=50, le=500, description="Main line length in pixels")
@@ -68,23 +74,25 @@ class LineContextParams(BaseModel):
 
 class ContrastParams(BaseModel):
     """Parameters for simultaneous contrast stimuli."""
+
     model_config = ConfigDict(extra="forbid")
 
     target_luminance: float = Field(..., ge=0.0, le=1.0, description="Target luminance (0-1)")
     surround_luminance: float = Field(..., ge=0.0, le=1.0, description="Surround luminance (0-1)")
     target_size: float = Field(..., ge=50, le=400, description="Target square size in pixels")
     surround_size: float = Field(..., ge=200, le=800, description="Surround square size in pixels")
-    hue: float = Field(default=0.0, ge=0.0, le=360.0, description="Hue angle (0=gray, >0=chromatic)")
+    hue: float = Field(
+        default=0.0, ge=0.0, le=360.0, description="Hue angle (0=gray, >0=chromatic)"
+    )
     saturation: float = Field(default=0.0, ge=0.0, le=1.0, description="Color saturation")
 
 
 class CrowdingParams(BaseModel):
     """Parameters for crowding/flanking stimuli."""
+
     model_config = ConfigDict(extra="forbid")
 
-    target_type: Literal["T", "L", "+", "square"] = Field(
-        default="T", description="Target shape"
-    )
+    target_type: Literal["T", "L", "+", "square"] = Field(default="T", description="Target shape")
     target_size: float = Field(..., ge=20, le=200, description="Target size in pixels")
     flanker_distance: float = Field(..., ge=10, le=300, description="Flanker distance in pixels")
     num_flankers: int = Field(..., ge=2, le=8, description="Number of flankers")
@@ -97,6 +105,7 @@ class CrowdingParams(BaseModel):
 
 class GratingParams(BaseModel):
     """Parameters for grating detection stimuli."""
+
     model_config = ConfigDict(extra="forbid")
 
     spatial_frequency: float = Field(
@@ -113,16 +122,13 @@ class GratingParams(BaseModel):
 
 # Union type for all stimulus parameters
 StimulusParams = (
-    SizeContextParams
-    | LineContextParams
-    | ContrastParams
-    | CrowdingParams
-    | GratingParams
+    SizeContextParams | LineContextParams | ContrastParams | CrowdingParams | GratingParams
 )
 
 
 class TaskSpec(BaseModel):
     """Task specification for a stimulus."""
+
     model_config = ConfigDict(extra="forbid")
 
     task_type: TaskType
@@ -133,6 +139,7 @@ class TaskSpec(BaseModel):
 
 class SafetyFlags(BaseModel):
     """Safety flags for stimulus rendering."""
+
     model_config = ConfigDict(extra="forbid")
 
     has_flashing: bool = Field(default=False, description="Contains flashing/flickering")
@@ -157,6 +164,7 @@ class StimulusSpec(BaseModel):
     This is the main DSL class that defines all aspects of a stimulus:
     family, parameters, task, seed, and safety flags.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     family: StimulusFamily

@@ -99,19 +99,14 @@ class ExperimentService:
             return None
 
         # Get stimuli for this study
-        stimuli = (
-            self.db.query(Stimulus)
-            .filter(Stimulus.study_id == session.study_id)
-            .all()
-        )
+        stimuli = self.db.query(Stimulus).filter(Stimulus.study_id == session.study_id).all()
 
         if not stimuli:
             raise ValueError(f"No stimuli found for study {session.study_id}")
 
         # Get already presented stimuli
         presented_ids = {
-            t.stimulus_id
-            for t in self.db.query(Trial).filter(Trial.session_id == session_id).all()
+            t.stimulus_id for t in self.db.query(Trial).filter(Trial.session_id == session_id).all()
         }
 
         # Select next stimulus
@@ -123,6 +118,7 @@ class ExperimentService:
         # Randomize if configured
         if config.randomize_order:
             import random
+
             selected_stimulus = random.choice(available)
         else:
             selected_stimulus = available[0]
@@ -180,9 +176,7 @@ class ExperimentService:
 
         # Check if response already exists
         existing = (
-            self.db.query(Response)
-            .filter(Response.trial_id == response_data.trial_id)
-            .first()
+            self.db.query(Response).filter(Response.trial_id == response_data.trial_id).first()
         )
         if existing:
             raise ValueError(f"Response for trial {response_data.trial_id} already exists")
@@ -257,9 +251,7 @@ class ExperimentService:
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
-        total_trials = (
-            self.db.query(Trial).filter(Trial.session_id == session_id).count()
-        )
+        total_trials = self.db.query(Trial).filter(Trial.session_id == session_id).count()
         completed_trials = (
             self.db.query(Trial)
             .filter(Trial.session_id == session_id, Trial.response is not None)

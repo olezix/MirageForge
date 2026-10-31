@@ -4,7 +4,6 @@ Generator for size context stimuli (Ebbinghaus-like).
 Generates parameterized stimuli that test size perception in context.
 """
 
-
 import numpy as np
 
 from mirageforge.stimuli.dsl import (

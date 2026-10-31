@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class StudyBase(BaseModel):
     """Base schema for Study."""
+
     title: str = Field(..., min_length=1, max_length=255)
     version: str = Field(default="1.0.0", max_length=50)
     consent_text: str = Field(..., min_length=10)
@@ -22,11 +23,13 @@ class StudyBase(BaseModel):
 
 class StudyCreate(StudyBase):
     """Schema for creating a Study."""
+
     pass
 
 
 class StudyUpdate(BaseModel):
     """Schema for updating a Study."""
+
     title: str | None = Field(None, min_length=1, max_length=255)
     version: str | None = Field(None, max_length=50)
     consent_text: str | None = Field(None, min_length=10)
@@ -36,6 +39,7 @@ class StudyUpdate(BaseModel):
 
 class StudyResponse(StudyBase):
     """Schema for Study response."""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -45,6 +49,7 @@ class StudyResponse(StudyBase):
 
 class StimulusBase(BaseModel):
     """Base schema for Stimulus."""
+
     family: str = Field(..., min_length=1, max_length=100)
     params: dict[str, Any] = Field(...)
     seed: int = Field(..., ge=0)
@@ -55,11 +60,13 @@ class StimulusBase(BaseModel):
 
 class StimulusCreate(StimulusBase):
     """Schema for creating a Stimulus."""
+
     study_id: int | None = None
 
 
 class StimulusResponse(StimulusBase):
     """Schema for Stimulus response."""
+
     id: int
     study_id: int | None
     image_path: str
@@ -71,12 +78,14 @@ class StimulusResponse(StimulusBase):
 
 class SessionCreate(BaseModel):
     """Schema for creating a Session."""
+
     study_id: int
     consent_version: str = Field(..., max_length=50)
 
 
 class SessionResponse(BaseModel):
     """Schema for Session response."""
+
     id: str
     study_id: int
     consent_version: str
@@ -89,6 +98,7 @@ class SessionResponse(BaseModel):
 
 class TrialBase(BaseModel):
     """Base schema for Trial."""
+
     stimulus_id: int
     task_type: Literal["2AFC", "yes_no", "same_different"]
     option_order: dict[str, Any]
@@ -96,11 +106,13 @@ class TrialBase(BaseModel):
 
 class TrialCreate(TrialBase):
     """Schema for creating a Trial."""
+
     session_id: str
 
 
 class TrialResponse(TrialBase):
     """Schema for Trial response."""
+
     id: int
     session_id: str
     presented_at: datetime
@@ -111,6 +123,7 @@ class TrialResponse(TrialBase):
 
 class ResponseCreate(BaseModel):
     """Schema for creating a Response."""
+
     trial_id: int
     choice: str = Field(..., min_length=1, max_length=100)
     reaction_time_ms: int = Field(..., ge=0, le=300000)  # Max 5 minutes
@@ -129,6 +142,7 @@ class ResponseCreate(BaseModel):
 
 class ResponseResponse(BaseModel):
     """Schema for Response response."""
+
     id: int
     trial_id: int
     choice: str
@@ -141,6 +155,7 @@ class ResponseResponse(BaseModel):
 
 class ModelRunBase(BaseModel):
     """Base schema for ModelRun."""
+
     model_name: str = Field(..., min_length=1, max_length=100)
     model_version: str = Field(..., max_length=50)
     stimulus_id: int
@@ -150,11 +165,13 @@ class ModelRunBase(BaseModel):
 
 class ModelRunCreate(ModelRunBase):
     """Schema for creating a ModelRun."""
+
     pass
 
 
 class ModelRunResponse(ModelRunBase):
     """Schema for ModelRun response."""
+
     id: int
     created_at: datetime
 
@@ -163,6 +180,7 @@ class ModelRunResponse(ModelRunBase):
 
 class AuditEventCreate(BaseModel):
     """Schema for creating an AuditEvent."""
+
     event_type: str = Field(..., min_length=1, max_length=100)
     metadata_json: dict[str, Any] = Field(default_factory=dict)
 
@@ -179,6 +197,7 @@ class AuditEventCreate(BaseModel):
 
 class AuditEventResponse(BaseModel):
     """Schema for AuditEvent response."""
+
     id: int
     event_type: str
     metadata_json: dict[str, Any]
@@ -189,6 +208,7 @@ class AuditEventResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str = "ok"
     version: str
     timestamp: datetime
@@ -196,6 +216,7 @@ class HealthResponse(BaseModel):
 
 class ExperimentConfig(BaseModel):
     """Configuration for an experiment session."""
+
     study_id: int
     trials_count: int = Field(default=12, ge=1, le=100)
     randomize_order: bool = Field(default=True)
@@ -204,6 +225,7 @@ class ExperimentConfig(BaseModel):
 
 class StatsSummary(BaseModel):
     """Summary statistics for a study."""
+
     study_id: int
     total_sessions: int
     completed_sessions: int
@@ -215,6 +237,7 @@ class StatsSummary(BaseModel):
 
 class DivergenceMetric(BaseModel):
     """Divergence metric between human and model responses."""
+
     stimulus_id: int
     family: str
     absolute_difference: float = Field(..., ge=0.0, le=1.0)
