@@ -205,7 +205,9 @@ class DiversityAcquisition(AcquisitionStrategy):
         if remaining > 0:
             available = [i for i in range(len(candidates)) if i not in selected_indices]
             if available:
-                extra = self.rng.choice(available, size=min(remaining, len(available)), replace=False)
+                extra = self.rng.choice(
+                    available, size=min(remaining, len(available)), replace=False
+                )
                 selected_indices.extend(extra.tolist())
 
         return [candidates[i] for i in selected_indices[:count]]

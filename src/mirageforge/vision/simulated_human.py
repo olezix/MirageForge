@@ -241,19 +241,21 @@ class SimulatedHumanModel(VisionBackend):
     def get_info(self) -> dict[str, Any]:
         """Get model information."""
         info = super().get_info()
-        info.update({
-            "description": "Simulated human observer with parameterized psychometric functions",
-            "limitations": [
-                "SYNTHETIC responses, not from real participants",
-                "Based on simplified models of known illusions",
-                "Does not capture full complexity of human perception",
-                "Should not be used for scientific conclusions without real validation",
-            ],
-            "assumptions": [
-                f"Noise level: {self.noise_level}",
-                f"Bias strength: {self.bias_strength}",
-                "Biases based on literature on classical illusions",
-            ],
-            "use_case": "Testing pipeline, demonstrating platform, synthetic validation",
-        })
+        info.update(
+            {
+                "description": "Simulated human observer with parameterized psychometric functions",
+                "limitations": [
+                    "SYNTHETIC responses, not from real participants",
+                    "Based on simplified models of known illusions",
+                    "Does not capture full complexity of human perception",
+                    "Should not be used for scientific conclusions without real validation",
+                ],
+                "assumptions": [
+                    f"Noise level: {self.noise_level}",
+                    f"Bias strength: {self.bias_strength}",
+                    "Biases based on literature on classical illusions",
+                ],
+                "use_case": "Testing pipeline, demonstrating platform, synthetic validation",
+            }
+        )
         return info

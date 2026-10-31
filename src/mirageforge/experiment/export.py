@@ -45,15 +45,33 @@ def export_study_to_csv(
     stimuli_file = output_dir / f"study_{study_id}_stimuli.csv"
     with open(stimuli_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "id", "family", "params", "seed", "image_path", "sha256",
-            "task_spec", "intended_effect", "created_at",
-        ])
+        writer.writerow(
+            [
+                "id",
+                "family",
+                "params",
+                "seed",
+                "image_path",
+                "sha256",
+                "task_spec",
+                "intended_effect",
+                "created_at",
+            ]
+        )
         for s in stimuli:
-            writer.writerow([
-                s.id, s.family, json.dumps(s.params), s.seed, s.image_path,
-                s.sha256, json.dumps(s.task_spec), s.intended_effect, s.created_at,
-            ])
+            writer.writerow(
+                [
+                    s.id,
+                    s.family,
+                    json.dumps(s.params),
+                    s.seed,
+                    s.image_path,
+                    s.sha256,
+                    json.dumps(s.task_spec),
+                    s.intended_effect,
+                    s.created_at,
+                ]
+            )
     files["stimuli"] = stimuli_file
 
     # Export sessions
@@ -63,9 +81,15 @@ def export_study_to_csv(
         writer = csv.writer(f)
         writer.writerow(["id", "consent_version", "status", "created_at", "completed_at"])
         for sess in sessions:
-            writer.writerow([
-                sess.id, sess.consent_version, sess.status, sess.created_at, sess.completed_at,
-            ])
+            writer.writerow(
+                [
+                    sess.id,
+                    sess.consent_version,
+                    sess.status,
+                    sess.created_at,
+                    sess.completed_at,
+                ]
+            )
     files["sessions"] = sessions_file
 
     # Export responses
@@ -79,16 +103,32 @@ def export_study_to_csv(
             responses_file = output_dir / f"study_{study_id}_responses.csv"
             with open(responses_file, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    "response_id", "trial_id", "session_id", "stimulus_id",
-                    "choice", "reaction_time_ms", "confidence", "created_at",
-                ])
+                writer.writerow(
+                    [
+                        "response_id",
+                        "trial_id",
+                        "session_id",
+                        "stimulus_id",
+                        "choice",
+                        "reaction_time_ms",
+                        "confidence",
+                        "created_at",
+                    ]
+                )
                 for r in responses:
                     trial = db.query(Trial).filter(Trial.id == r.trial_id).first()
-                    writer.writerow([
-                        r.id, r.trial_id, trial.session_id, trial.stimulus_id,
-                        r.choice, r.reaction_time_ms, r.confidence, r.created_at,
-                    ])
+                    writer.writerow(
+                        [
+                            r.id,
+                            r.trial_id,
+                            trial.session_id,
+                            trial.stimulus_id,
+                            r.choice,
+                            r.reaction_time_ms,
+                            r.confidence,
+                            r.created_at,
+                        ]
+                    )
             files["responses"] = responses_file
 
     # Export model runs
@@ -99,15 +139,29 @@ def export_study_to_csv(
             model_file = output_dir / f"study_{study_id}_model_runs.csv"
             with open(model_file, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    "id", "model_name", "model_version", "stimulus_id",
-                    "probe", "scores", "created_at",
-                ])
+                writer.writerow(
+                    [
+                        "id",
+                        "model_name",
+                        "model_version",
+                        "stimulus_id",
+                        "probe",
+                        "scores",
+                        "created_at",
+                    ]
+                )
                 for m in model_runs:
-                    writer.writerow([
-                        m.id, m.model_name, m.model_version, m.stimulus_id,
-                        json.dumps(m.probe), json.dumps(m.scores), m.created_at,
-                    ])
+                    writer.writerow(
+                        [
+                            m.id,
+                            m.model_name,
+                            m.model_version,
+                            m.stimulus_id,
+                            json.dumps(m.probe),
+                            json.dumps(m.scores),
+                            m.created_at,
+                        ]
+                    )
             files["model_runs"] = model_file
 
     return files
@@ -152,24 +206,28 @@ def export_study_to_json(
     # Export stimuli
     stimuli = db.query(Stimulus).filter(Stimulus.study_id == study_id).all()
     for s in stimuli:
-        data["stimuli"].append({
-            "id": s.id,
-            "family": s.family,
-            "params": s.params,
-            "seed": s.seed,
-            "sha256": s.sha256,
-            "task_spec": s.task_spec,
-        })
+        data["stimuli"].append(
+            {
+                "id": s.id,
+                "family": s.family,
+                "params": s.params,
+                "seed": s.seed,
+                "sha256": s.sha256,
+                "task_spec": s.task_spec,
+            }
+        )
 
     # Export sessions and responses
     sessions = db.query(Session).filter(Session.study_id == study_id).all()
     for sess in sessions:
-        data["sessions"].append({
-            "id": sess.id,
-            "status": sess.status,
-            "created_at": sess.created_at.isoformat(),
-            "completed_at": sess.completed_at.isoformat() if sess.completed_at else None,
-        })
+        data["sessions"].append(
+            {
+                "id": sess.id,
+                "status": sess.status,
+                "created_at": sess.created_at.isoformat(),
+                "completed_at": sess.completed_at.isoformat() if sess.completed_at else None,
+            }
+        )
 
     # Export responses (anonymized)
     session_ids = [s.id for s in sessions]
@@ -178,26 +236,30 @@ def export_study_to_json(
         for trial in trials:
             response = db.query(Response).filter(Response.trial_id == trial.id).first()
             if response:
-                data["responses"].append({
-                    "trial_id": trial.id,
-                    "session_id": trial.session_id,
-                    "stimulus_id": trial.stimulus_id,
-                    "choice": response.choice,
-                    "reaction_time_ms": response.reaction_time_ms,
-                    "confidence": response.confidence,
-                })
+                data["responses"].append(
+                    {
+                        "trial_id": trial.id,
+                        "session_id": trial.session_id,
+                        "stimulus_id": trial.stimulus_id,
+                        "choice": response.choice,
+                        "reaction_time_ms": response.reaction_time_ms,
+                        "confidence": response.confidence,
+                    }
+                )
 
     # Export model runs
     stimulus_ids = [s.id for s in stimuli]
     if stimulus_ids:
         model_runs = db.query(ModelRun).filter(ModelRun.stimulus_id.in_(stimulus_ids)).all()
         for m in model_runs:
-            data["model_runs"].append({
-                "model_name": m.model_name,
-                "model_version": m.model_version,
-                "stimulus_id": m.stimulus_id,
-                "scores": m.scores,
-            })
+            data["model_runs"].append(
+                {
+                    "model_name": m.model_name,
+                    "model_version": m.model_version,
+                    "stimulus_id": m.stimulus_id,
+                    "scores": m.scores,
+                }
+            )
 
     # Write to file
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -251,7 +313,9 @@ def generate_markdown_report(
         lines.append("")
         lines.append("**This report contains SYNTHETIC data generated by a simulator.**")
         lines.append("These results are for demonstration purposes only and do not represent")
-        lines.append("real human participants. No scientific conclusions should be drawn from this data.")
+        lines.append(
+            "real human participants. No scientific conclusions should be drawn from this data."
+        )
         lines.append("")
 
     lines.append("## Summary Statistics")

@@ -32,6 +32,7 @@ app = FastAPI(
     redoc_url="/redoc" if get_settings().debug else None,
 )
 
+
 # Security headers middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -41,8 +42,11 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     # CSP - Content Security Policy
-    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    )
     return response
+
 
 # CORS middleware (for development)
 if get_settings().is_development():
@@ -503,6 +507,7 @@ async def health_check():
 
 # API Endpoints
 
+
 @app.post("/api/session")
 async def create_session(session_data: SessionCreate):
     """Create a new experiment session."""
@@ -566,4 +571,5 @@ async def complete_session(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
