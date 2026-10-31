@@ -231,9 +231,7 @@ class StimulusRenderer:
         surround_rgb = self._luminance_to_rgb(
             params.surround_luminance, params.hue, params.saturation
         )
-        target_rgb = self._luminance_to_rgb(
-            params.target_luminance, params.hue, params.saturation
-        )
+        target_rgb = self._luminance_to_rgb(params.target_luminance, params.hue, params.saturation)
 
         # Draw surround
         surround_half = int(params.surround_size / 2)
@@ -272,7 +270,9 @@ class StimulusRenderer:
         center_y = self.image_size // 2
 
         # Draw target
-        self._draw_shape(draw, params.target_type, center_x, center_y, params.target_size, params.target_rotation)
+        self._draw_shape(
+            draw, params.target_type, center_x, center_y, params.target_size, params.target_rotation
+        )
 
         # Draw flankers
         if params.flanker_type != "none":

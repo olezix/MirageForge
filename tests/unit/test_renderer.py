@@ -83,6 +83,7 @@ class TestStimulusRenderer:
 
         # Convert to bytes and compare
         import io
+
         buf1 = io.BytesIO()
         buf2 = io.BytesIO()
         image1.save(buf1, format="PNG")
@@ -156,4 +157,4 @@ class TestStimulusRenderer:
         assert len(checksum) == 64
 
         # Verify PNG signature
-        assert png_bytes[:8] == b'\x89PNG\r\n\x1a\n'
+        assert png_bytes[:8] == b"\x89PNG\r\n\x1a\n"

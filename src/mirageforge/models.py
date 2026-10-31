@@ -16,6 +16,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
+
     pass
 
 
@@ -26,6 +27,7 @@ class Study(Base):
     A study defines the parameters, consent text, and configuration for a research experiment.
     Multiple sessions can belong to the same study.
     """
+
     __tablename__ = "studies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -54,6 +56,7 @@ class Stimulus(Base):
     Each stimulus is uniquely identified by its family, parameters, and seed.
     The SHA256 checksum ensures reproducibility and integrity.
     """
+
     __tablename__ = "stimuli"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -84,6 +87,7 @@ class Session(Base):
     Each session represents one participant's interaction with the experiment.
     Sessions are identified by random UUIDs with no personally identifiable information.
     """
+
     __tablename__ = "sessions"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)  # UUID
@@ -109,19 +113,26 @@ class Trial(Base):
 
     A trial presents one stimulus to the participant and records their response.
     """
+
     __tablename__ = "trials"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     session_id: Mapped[str] = mapped_column(String(36), ForeignKey("sessions.id"), nullable=False)
     stimulus_id: Mapped[int] = mapped_column(Integer, ForeignKey("stimuli.id"), nullable=False)
-    task_type: Mapped[str] = mapped_column(String(50), nullable=False)  # 2AFC, yes_no, same_different
+    task_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # 2AFC, yes_no, same_different
     option_order: Mapped[dict] = mapped_column(JSON, nullable=False)  # Randomized option order
-    presented_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    presented_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     session: Mapped["Session"] = relationship("Session", back_populates="trials")
     stimulus: Mapped["Stimulus"] = relationship("Stimulus", back_populates="trials")
-    response: Mapped[Optional["Response"]] = relationship("Response", back_populates="trial", uselist=False)
+    response: Mapped[Optional["Response"]] = relationship(
+        "Response", back_populates="trial", uselist=False
+    )
 
     def __repr__(self) -> str:
         return f"<Trial(id={self.id}, task_type='{self.task_type}')>"
@@ -134,13 +145,18 @@ class Response(Base):
     Records the choice, reaction time, and optional confidence rating.
     No personally identifiable information is stored.
     """
+
     __tablename__ = "responses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trial_id: Mapped[int] = mapped_column(Integer, ForeignKey("trials.id"), nullable=False, unique=True)
+    trial_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("trials.id"), nullable=False, unique=True
+    )
     choice: Mapped[str] = mapped_column(String(100), nullable=False)
     reaction_time_ms: Mapped[int] = mapped_column(Integer, nullable=False)
-    confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Optional confidence rating
+    confidence: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )  # Optional confidence rating
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -157,6 +173,7 @@ class ModelRun(Base):
     Records the model's scores/predictions for a given stimulus.
     Used to compare with human responses and identify divergence.
     """
+
     __tablename__ = "model_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -171,7 +188,9 @@ class ModelRun(Base):
     stimulus: Mapped["Stimulus"] = relationship("Stimulus", back_populates="model_runs")
 
     def __repr__(self) -> str:
-        return f"<ModelRun(id={self.id}, model='{self.model_name}', stimulus_id={self.stimulus_id})>"
+        return (
+            f"<ModelRun(id={self.id}, model='{self.model_name}', stimulus_id={self.stimulus_id})>"
+        )
 
 
 class AuditEvent(Base):
@@ -181,6 +200,7 @@ class AuditEvent(Base):
     Records important system events without storing personally identifiable information.
     Used for debugging and compliance.
     """
+
     __tablename__ = "audit_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

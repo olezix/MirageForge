@@ -7,6 +7,7 @@ and acquisition strategies for identifying interesting stimuli.
 
 from mirageforge.search.acquisition import (
     AcquisitionStrategy,
+    DiversityAcquisition,
     RandomAcquisition,
     UCBAcquisition,
 )
@@ -24,5 +25,6 @@ __all__ = [
     "AcquisitionStrategy",
     "RandomAcquisition",
     "UCBAcquisition",
+    "DiversityAcquisition",
     "CandidateArchive",
 ]

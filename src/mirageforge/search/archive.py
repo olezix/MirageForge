@@ -29,11 +29,13 @@ class CandidateRecord:
         """Calculate checksum if not provided."""
         if not self.checksum:
             param_dict = self.spec.get_param_dict()
-            self.checksum = hash_dict({
-                "family": self.spec.family.value,
-                "params": param_dict,
-                "seed": self.spec.seed,
-            })
+            self.checksum = hash_dict(
+                {
+                    "family": self.spec.family.value,
+                    "params": param_dict,
+                    "seed": self.spec.seed,
+                }
+            )
 
 
 class CandidateArchive:
@@ -172,8 +174,10 @@ class CandidateArchive:
         """
         # Filter candidates that have the score
         candidates_with_score = [
-            r for r in self.records.values()
-            if sort_by == "divergence_score" and r.divergence_score is not None
+            r
+            for r in self.records.values()
+            if sort_by == "divergence_score"
+            and r.divergence_score is not None
             or sort_by in r.scores
         ]
 
@@ -206,8 +210,7 @@ class CandidateArchive:
 
         # Calculate average scores
         divergence_scores = [
-            r.divergence_score for r in self.records.values()
-            if r.divergence_score is not None
+            r.divergence_score for r in self.records.values() if r.divergence_score is not None
         ]
 
         return {
@@ -215,8 +218,7 @@ class CandidateArchive:
             "selected_candidates": selected,
             "total_rounds": rounds,
             "avg_divergence_score": (
-                sum(divergence_scores) / len(divergence_scores)
-                if divergence_scores else 0.0
+                sum(divergence_scores) / len(divergence_scores) if divergence_scores else 0.0
             ),
             "max_divergence_score": max(divergence_scores) if divergence_scores else 0.0,
         }

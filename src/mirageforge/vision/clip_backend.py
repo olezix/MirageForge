@@ -149,16 +149,18 @@ class CLIPVisionBackend(VisionBackend):
     def get_info(self) -> dict[str, Any]:
         """Get model information."""
         info = super().get_info()
-        info.update({
-            "description": "OpenAI CLIP model for vision-language predictions",
-            "model_name": self._model_name,
-            "device": self._device,
-            "limitations": [
-                "Requires torch and transformers",
-                "May be slow on CPU",
-                "Not specifically trained on illusions",
-                "Image-text similarity may not match human perception",
-            ],
-            "use_case": "Comparing with human responses, identifying divergence",
-        })
+        info.update(
+            {
+                "description": "OpenAI CLIP model for vision-language predictions",
+                "model_name": self._model_name,
+                "device": self._device,
+                "limitations": [
+                    "Requires torch and transformers",
+                    "May be slow on CPU",
+                    "Not specifically trained on illusions",
+                    "Image-text similarity may not match human perception",
+                ],
+                "use_case": "Comparing with human responses, identifying divergence",
+            }
+        )
         return info

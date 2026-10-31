@@ -224,7 +224,7 @@ def chi_squared_test(
     if not mask.any():
         return (0.0, 1.0)
 
-    chi2 = np.sum((observed[mask] - expected[mask])**2 / expected[mask])
+    chi2 = np.sum((observed[mask] - expected[mask]) ** 2 / expected[mask])
     df = mask.sum() - 1
 
     if df <= 0:
