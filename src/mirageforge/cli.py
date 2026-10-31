@@ -9,7 +9,6 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 from mirageforge import __version__
 
@@ -25,9 +24,9 @@ def main() -> None:
         action="version",
         version=f"MirageForge {__version__}",
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # Demo command
     demo_parser = subparsers.add_parser(
         "demo",
@@ -63,13 +62,13 @@ def main() -> None:
         default=12,
         help="Number of top candidates to select",
     )
-    
+
     # Init-db command
     subparsers.add_parser(
         "init-db",
         help="Initialize database",
     )
-    
+
     # Run-server command
     server_parser = subparsers.add_parser(
         "run-server",
@@ -92,7 +91,7 @@ def main() -> None:
         action="store_true",
         help="Enable auto-reload for development",
     )
-    
+
     # Export command
     export_parser = subparsers.add_parser(
         "export",
@@ -117,7 +116,7 @@ def main() -> None:
         required=True,
         help="Output path",
     )
-    
+
     # Analyze command
     analyze_parser = subparsers.add_parser(
         "analyze",
@@ -135,13 +134,13 @@ def main() -> None:
         required=True,
         help="Output directory for analysis",
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.command is None:
         parser.print_help()
         sys.exit(1)
-    
+
     # Dispatch to command handlers
     if args.command == "demo":
         run_demo(args)
@@ -158,23 +157,22 @@ def main() -> None:
 def run_demo(args: argparse.Namespace) -> None:
     """Run synthetic demo pipeline."""
     import logging
-    
-    from mirageforge.config import get_settings
+
     from mirageforge.db import get_engine, init_db
     from mirageforge.experiment.export import (
         export_study_to_csv,
         generate_markdown_report,
     )
-    from mirageforge.models import ModelRun, Session, Stimulus, Study
+    from mirageforge.models import ModelRun, Stimulus, Study
     from mirageforge.search import CandidateArchive, CandidateGenerator, UCBAcquisition
     from mirageforge.stimuli.renderer import StimulusRenderer
     from mirageforge.utils.logging import setup_logging
     from mirageforge.vision.mock import MockVisionModel
     from mirageforge.vision.simulated_human import SimulatedHumanModel
-    
+
     setup_logging("INFO")
     logger = logging.getLogger(__name__)
-    
+
     logger.info("=" * 70)
     logger.info("MirageForge Synthetic Demo Pipeline")
     logger.info("=" * 70)
@@ -183,34 +181,34 @@ def run_demo(args: argparse.Namespace) -> None:
     logger.info("   No real human participants are involved")
     logger.info("   Results are for demonstration only")
     logger.info("")
-    
+
     # Configuration
     output_dir = args.out
     seed = args.seed
     num_rounds = args.rounds
     candidates_per_round = args.candidates
     top_k = args.top
-    
-    logger.info(f"Configuration:")
+
+    logger.info("Configuration:")
     logger.info(f"  Output directory: {output_dir}")
     logger.info(f"  Random seed: {seed}")
     logger.info(f"  Rounds: {num_rounds}")
     logger.info(f"  Candidates per round: {candidates_per_round}")
     logger.info(f"  Top candidates: {top_k}")
     logger.info("")
-    
+
     # Initialize
     output_dir.mkdir(parents=True, exist_ok=True)
     stimuli_dir = output_dir / "stimuli"
     stimuli_dir.mkdir(exist_ok=True)
-    
+
     # Initialize database
     logger.info("Initializing database...")
     engine = get_engine()
     init_db(engine)
-    
+
     from mirageforge.db import get_db_global
-    
+
     with get_db_global() as db:
         # Create demo study
         study = Study(
@@ -227,28 +225,28 @@ def run_demo(args: argparse.Namespace) -> None:
         db.add(study)
         db.commit()
         db.refresh(study)
-        
+
         logger.info(f"Created study: {study.id} - {study.title}")
         logger.info("")
-        
+
         # Initialize components
         renderer = StimulusRenderer(image_size=512)  # Smaller for demo speed
         generator = CandidateGenerator(seed=seed)
         acquisition = UCBAcquisition(exploration_weight=1.5, seed=seed)
         archive = CandidateArchive()
-        
+
         mock_model = MockVisionModel()
         human_model = SimulatedHumanModel(noise_level=0.15, bias_strength=0.7, seed=seed)
-        
+
         logger.info("Running active search...")
         logger.info("")
-        
+
         # Active search loop
         all_candidates = []
-        
+
         for round_num in range(num_rounds):
             logger.info(f"Round {round_num + 1}/{num_rounds}")
-            
+
             # Generate candidates
             if round_num == 0:
                 candidates = generator.generate_random(count=candidates_per_round)
@@ -267,57 +265,58 @@ def run_demo(args: argparse.Namespace) -> None:
                         count=candidates_per_round - len(candidates),
                     )
                     candidates.extend(extra)
-            
+
             logger.info(f"  Generated {len(candidates)} candidates")
-            
+
             # Select candidates using acquisition strategy
             selected = acquisition.select(candidates, count=min(50, len(candidates)))
             logger.info(f"  Selected {len(selected)} for evaluation")
-            
+
             # Evaluate candidates
             for i, spec in enumerate(selected):
                 # Render stimulus
                 checksum = renderer.render_to_file(spec, stimuli_dir / f"stim_{round_num}_{i}.png")
-                
+
                 # Add to archive
                 cs = archive.add(spec, round_number=round_num, checksum=checksum)
-                
+
                 # Get predictions from both models
                 image = renderer.render(spec)
                 task_spec = spec.get_task_dict()
                 task_spec["stimulus_params"] = spec.get_param_dict()
                 task_spec["family"] = spec.family.value
-                
+
                 mock_pred = mock_model.predict(image, task_spec)
                 human_pred = human_model.predict(image, task_spec)
-                
+
                 # Calculate divergence
-                from mirageforge.experiment.stats import jensen_shannon_divergence
                 import numpy as np
-                
+
+                from mirageforge.experiment.stats import jensen_shannon_divergence
+
                 mock_probs = np.array(list(mock_pred["predictions"].values()))
                 human_probs = np.array(list(human_pred["predictions"].values()))
                 divergence = jensen_shannon_divergence(human_probs, mock_probs)
-                
+
                 # Update archive
                 archive.update_scores(
                     cs,
                     scores={"mock": float(np.max(mock_probs)), "human": float(np.max(human_probs))},
                     divergence_score=divergence,
                 )
-                
+
                 all_candidates.append((spec, checksum, divergence))
-            
+
             logger.info(f"  Evaluated {len(selected)} candidates")
             logger.info("")
-        
+
         # Select top candidates
         logger.info(f"Selecting top {top_k} candidates...")
         top_records = archive.get_top_candidates(count=top_k)
-        
+
         for record in top_records:
             archive.mark_selected(record.checksum)
-            
+
             # Add to database
             stimulus = Stimulus(
                 study_id=study.id,
@@ -333,20 +332,20 @@ def run_demo(args: argparse.Namespace) -> None:
             db.add(stimulus)
             db.commit()  # Commit to get stimulus.id
             db.refresh(stimulus)
-            
+
             # Render if not already rendered
             if not Path(stimulus.image_path).exists():
                 renderer.render_to_file(record.spec, Path(stimulus.image_path))
-            
+
             # Add model runs
             image = renderer.render(record.spec)
             task_spec = record.spec.get_task_dict()
             task_spec["stimulus_params"] = record.spec.get_param_dict()
             task_spec["family"] = record.spec.family.value
-            
+
             mock_pred = mock_model.predict(image, task_spec)
             human_pred = human_model.predict(image, task_spec)
-            
+
             mock_run = ModelRun(
                 model_name=mock_model.name,
                 model_version=mock_model.version,
@@ -355,7 +354,7 @@ def run_demo(args: argparse.Namespace) -> None:
                 scores=mock_pred,
             )
             db.add(mock_run)
-            
+
             human_run = ModelRun(
                 model_name=human_model.name,
                 model_version=human_model.version,
@@ -364,64 +363,64 @@ def run_demo(args: argparse.Namespace) -> None:
                 scores=human_pred,
             )
             db.add(human_run)
-        
+
         db.commit()
         logger.info(f"Added {len(top_records)} selected stimuli to database")
         logger.info("")
-        
+
         # Run synthetic experiment
         logger.info("Running synthetic experiment...")
         from mirageforge.experiment.service import ExperimentService
         from mirageforge.schemas import ExperimentConfig, ResponseCreate, SessionCreate
-        
+
         service = ExperimentService(db)
-        
+
         # Create synthetic session
         session_data = SessionCreate(study_id=study.id, consent_version="1.0.0")
         session = service.create_session(session_data)
-        
+
         config = ExperimentConfig(study_id=study.id, trials_count=12)
-        
+
         # Simulate trials
-        for trial_num in range(12):
+        for _trial_num in range(12):
             trial = service.get_next_trial(session.id, config)
             if trial is None:
                 break
-            
+
             # Simulate response
             import random
             options = list(trial.option_order.keys())
             choice = random.choice(options)
             reaction_time = random.randint(500, 3000)
-            
+
             response_data = ResponseCreate(
                 trial_id=trial.id,
                 choice=choice,
                 reaction_time_ms=reaction_time,
             )
             service.record_response(response_data)
-        
+
         # Complete session
         service.complete_session(session.id)
         logger.info(f"Completed synthetic session: {session.id}")
         logger.info("")
-        
+
         # Export data
         logger.info("Exporting data...")
         csv_files = export_study_to_csv(db, study.id, output_dir)
         logger.info(f"  Exported CSV files: {list(csv_files.keys())}")
-        
+
         # Generate report
         report_file = output_dir / "report.md"
         generate_markdown_report(db, study.id, report_file, is_synthetic=True)
         logger.info(f"  Generated report: {report_file}")
-        
+
         # Generate HTML gallery
         logger.info("Generating HTML gallery...")
         gallery_file = output_dir / "index.html"
         _generate_html_gallery(top_records, stimuli_dir, gallery_file)
         logger.info(f"  Generated gallery: {gallery_file}")
-        
+
         # Generate metrics JSON
         metrics_file = output_dir / "metrics.json"
         stats = archive.get_stats()
@@ -430,7 +429,7 @@ def run_demo(args: argparse.Namespace) -> None:
         with open(metrics_file, "w") as f:
             json.dump(stats, f, indent=2)
         logger.info(f"  Generated metrics: {metrics_file}")
-        
+
         logger.info("")
         logger.info("=" * 70)
         logger.info("Demo completed successfully!")
@@ -478,14 +477,14 @@ def _generate_html_gallery(
     html_lines.append("    These are candidates for future research, not validated illusions.")
     html_lines.append("  </div>")
     html_lines.append("  <div class='gallery'>")
-    
+
     for i, record in enumerate(records):
         image_name = f"selected_{record.checksum[:8]}.png"
-        image_path = stimuli_dir / image_name
-        
+        stimuli_dir / image_name
+
         # Use relative path for HTML
         rel_path = f"stimuli/{image_name}"
-        
+
         html_lines.append("    <div class='card'>")
         html_lines.append(f"      <img src='{rel_path}' alt='Stimulus {i+1}'>")
         html_lines.append(f"      <h3>Candidate {i+1}</h3>")
@@ -494,7 +493,7 @@ def _generate_html_gallery(
         html_lines.append(f"      <p><strong>Divergence:</strong> {record.divergence_score:.4f}</p>")
         html_lines.append(f"      <p><strong>Checksum:</strong> {record.checksum[:16]}...</p>")
         html_lines.append("    </div>")
-    
+
     html_lines.append("  </div>")
     html_lines.append("  <footer style='margin-top: 40px; padding: 20px; text-align: center; color: #666;'>")
     html_lines.append("    <p>Generated by MirageForge Demo Pipeline</p>")
@@ -502,7 +501,7 @@ def _generate_html_gallery(
     html_lines.append("  </footer>")
     html_lines.append("</body>")
     html_lines.append("</html>")
-    
+
     with open(output_file, "w") as f:
         f.write("\n".join(html_lines))
 
@@ -511,9 +510,9 @@ def run_init_db(args: argparse.Namespace) -> None:
     """Initialize database."""
     from mirageforge.db import get_engine, init_db
     from mirageforge.utils.logging import setup_logging
-    
+
     setup_logging("INFO")
-    
+
     print("Initializing database...")
     engine = get_engine()
     init_db(engine)
@@ -523,11 +522,11 @@ def run_init_db(args: argparse.Namespace) -> None:
 def run_server(args: argparse.Namespace) -> None:
     """Start web server."""
     import uvicorn
-    
+
     from mirageforge.utils.logging import setup_logging
-    
+
     setup_logging("INFO")
-    
+
     print(f"Starting server on {args.host}:{args.port}")
     uvicorn.run(
         "mirageforge.web.app:app",
@@ -543,16 +542,16 @@ def run_export(args: argparse.Namespace) -> None:
     from mirageforge.db import get_db_global
     from mirageforge.experiment.export import export_study_to_csv, export_study_to_json
     from mirageforge.utils.logging import setup_logging
-    
+
     setup_logging("INFO")
-    
+
     settings = get_settings()
-    
+
     # Check admin token if required
     if settings.is_admin_enabled():
         print("Admin token required for export")
         # In real implementation, would prompt for token
-    
+
     with get_db_global() as db:
         if args.format == "csv":
             files = export_study_to_csv(db, args.study_id, args.out)
@@ -569,15 +568,15 @@ def run_analyze(args: argparse.Namespace) -> None:
     from mirageforge.db import get_db_global
     from mirageforge.experiment.export import generate_markdown_report
     from mirageforge.utils.logging import setup_logging
-    
+
     setup_logging("INFO")
-    
+
     args.out.mkdir(parents=True, exist_ok=True)
     report_file = args.out / "analysis_report.md"
-    
+
     with get_db_global() as db:
         generate_markdown_report(db, args.study_id, report_file, is_synthetic=False)
-    
+
     print(f"✓ Analysis report generated: {report_file}")
 
 

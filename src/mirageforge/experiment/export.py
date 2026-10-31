@@ -8,7 +8,7 @@ import csv
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.orm import Session as DBSession
 
@@ -22,24 +22,24 @@ def export_study_to_csv(
 ) -> dict[str, Path]:
     """
     Export study data to CSV files.
-    
+
     Args:
         db: Database session
         study_id: Study ID to export
         output_dir: Output directory
-        
+
     Returns:
         Dictionary mapping file type to file path
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Get study
     study = db.query(Study).filter(Study.id == study_id).first()
     if not study:
         raise ValueError(f"Study {study_id} not found")
-    
+
     files = {}
-    
+
     # Export stimuli
     stimuli = db.query(Stimulus).filter(Stimulus.study_id == study_id).all()
     stimuli_file = output_dir / f"study_{study_id}_stimuli.csv"
@@ -55,7 +55,7 @@ def export_study_to_csv(
                 s.sha256, json.dumps(s.task_spec), s.intended_effect, s.created_at,
             ])
     files["stimuli"] = stimuli_file
-    
+
     # Export sessions
     sessions = db.query(Session).filter(Session.study_id == study_id).all()
     sessions_file = output_dir / f"study_{study_id}_sessions.csv"
@@ -67,13 +67,13 @@ def export_study_to_csv(
                 sess.id, sess.consent_version, sess.status, sess.created_at, sess.completed_at,
             ])
     files["sessions"] = sessions_file
-    
+
     # Export responses
     session_ids = [s.id for s in sessions]
     if session_ids:
         trials = db.query(Trial).filter(Trial.session_id.in_(session_ids)).all()
         trial_ids = [t.id for t in trials]
-        
+
         if trial_ids:
             responses = db.query(Response).filter(Response.trial_id.in_(trial_ids)).all()
             responses_file = output_dir / f"study_{study_id}_responses.csv"
@@ -90,7 +90,7 @@ def export_study_to_csv(
                         r.choice, r.reaction_time_ms, r.confidence, r.created_at,
                     ])
             files["responses"] = responses_file
-    
+
     # Export model runs
     stimulus_ids = [s.id for s in stimuli]
     if stimulus_ids:
@@ -109,7 +109,7 @@ def export_study_to_csv(
                         json.dumps(m.probe), json.dumps(m.scores), m.created_at,
                     ])
             files["model_runs"] = model_file
-    
+
     return files
 
 
@@ -120,19 +120,19 @@ def export_study_to_json(
 ) -> dict[str, Any]:
     """
     Export study data to JSON.
-    
+
     Args:
         db: Database session
         study_id: Study ID
         output_file: Output file path
-        
+
     Returns:
         Exported data dictionary
     """
     study = db.query(Study).filter(Study.id == study_id).first()
     if not study:
         raise ValueError(f"Study {study_id} not found")
-    
+
     # Build export data
     data = {
         "study": {
@@ -148,7 +148,7 @@ def export_study_to_json(
         "model_runs": [],
         "exported_at": datetime.utcnow().isoformat(),
     }
-    
+
     # Export stimuli
     stimuli = db.query(Stimulus).filter(Stimulus.study_id == study_id).all()
     for s in stimuli:
@@ -160,7 +160,7 @@ def export_study_to_json(
             "sha256": s.sha256,
             "task_spec": s.task_spec,
         })
-    
+
     # Export sessions and responses
     sessions = db.query(Session).filter(Session.study_id == study_id).all()
     for sess in sessions:
@@ -170,7 +170,7 @@ def export_study_to_json(
             "created_at": sess.created_at.isoformat(),
             "completed_at": sess.completed_at.isoformat() if sess.completed_at else None,
         })
-    
+
     # Export responses (anonymized)
     session_ids = [s.id for s in sessions]
     if session_ids:
@@ -186,7 +186,7 @@ def export_study_to_json(
                     "reaction_time_ms": response.reaction_time_ms,
                     "confidence": response.confidence,
                 })
-    
+
     # Export model runs
     stimulus_ids = [s.id for s in stimuli]
     if stimulus_ids:
@@ -198,12 +198,12 @@ def export_study_to_json(
                 "stimulus_id": m.stimulus_id,
                 "scores": m.scores,
             })
-    
+
     # Write to file
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    
+
     return data
 
 
@@ -215,28 +215,28 @@ def generate_markdown_report(
 ) -> str:
     """
     Generate markdown report for a study.
-    
+
     Args:
         db: Database session
         study_id: Study ID
         output_file: Output file path
         is_synthetic: Whether data is synthetic
-        
+
     Returns:
         Report content
     """
     study = db.query(Study).filter(Study.id == study_id).first()
     if not study:
         raise ValueError(f"Study {study_id} not found")
-    
+
     # Gather statistics
     sessions = db.query(Session).filter(Session.study_id == study_id).all()
     total_sessions = len(sessions)
     completed_sessions = len([s for s in sessions if s.status == "completed"])
-    
+
     stimuli = db.query(Stimulus).filter(Stimulus.study_id == study_id).all()
     total_stimuli = len(stimuli)
-    
+
     # Build report
     lines = []
     lines.append(f"# Study Report: {study.title}")
@@ -245,7 +245,7 @@ def generate_markdown_report(
     lines.append(f"**Version:** {study.version}")
     lines.append(f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     lines.append("")
-    
+
     if is_synthetic:
         lines.append("## ⚠️ SYNTHETIC DATA WARNING")
         lines.append("")
@@ -253,14 +253,14 @@ def generate_markdown_report(
         lines.append("These results are for demonstration purposes only and do not represent")
         lines.append("real human participants. No scientific conclusions should be drawn from this data.")
         lines.append("")
-    
+
     lines.append("## Summary Statistics")
     lines.append("")
     lines.append(f"- **Total Sessions:** {total_sessions}")
     lines.append(f"- **Completed Sessions:** {completed_sessions}")
     lines.append(f"- **Total Stimuli:** {total_stimuli}")
     lines.append("")
-    
+
     lines.append("## Stimulus Families")
     lines.append("")
     family_counts = {}
@@ -269,7 +269,7 @@ def generate_markdown_report(
     for family, count in sorted(family_counts.items()):
         lines.append(f"- **{family}:** {count} stimuli")
     lines.append("")
-    
+
     lines.append("## Limitations")
     lines.append("")
     if is_synthetic:
@@ -280,7 +280,7 @@ def generate_markdown_report(
     lines.append("- Small sample sizes may limit statistical power")
     lines.append("- This is not a medical or diagnostic tool")
     lines.append("")
-    
+
     lines.append("## What Cannot Be Claimed")
     lines.append("")
     lines.append("Based on this data, we **cannot** claim:")
@@ -291,7 +291,7 @@ def generate_markdown_report(
     lines.append("")
     lines.append("Real validation with human participants and ethical approval is required.")
     lines.append("")
-    
+
     lines.append("## Next Steps for Real Validation")
     lines.append("")
     lines.append("1. Obtain ethical approval from an IRB or ethics committee")
@@ -300,12 +300,12 @@ def generate_markdown_report(
     lines.append("4. Analyze results with appropriate statistical methods")
     lines.append("5. Peer review and publication")
     lines.append("")
-    
+
     report_content = "\n".join(lines)
-    
+
     # Write to file
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report_content)
-    
+
     return report_content

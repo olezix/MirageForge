@@ -4,15 +4,12 @@ FastAPI web application for MirageForge.
 Provides web interface for experiments, dashboard, and API endpoints.
 """
 
-import secrets
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -97,32 +94,32 @@ async def landing_page(request: Request):
     <body>
         <h1>MirageForge</h1>
         <p><strong>Open research platform for AI-driven discovery of candidate visual illusions</strong></p>
-        
+
         <div class="warning">
             <strong>⚠️ Research Platform</strong><br>
             This is a research platform for studying visual perception.
             It is not a medical or diagnostic tool.
             Participation is voluntary and anonymous.
         </div>
-        
+
         <h2>About</h2>
         <p>MirageForge uses AI to generate candidate visual stimuli and compares human perception
         with vision model predictions to identify interesting perceptual phenomena.</p>
-        
+
         <h2>Participate in an Experiment</h2>
         <p>If you are 18 or older and interested in participating in a visual perception experiment:</p>
         <a href="/consent" class="button">Start Experiment</a>
-        
+
         <h2>Explore</h2>
         <p><a href="/gallery" class="button">View Gallery</a>
         <a href="/dashboard" class="button">View Dashboard</a></p>
-        
+
         <div class="disclaimer">
             <strong>Disclaimer:</strong> This platform is for research purposes only.
             It does not provide medical diagnoses or treatment.
             If you have concerns about your vision, please consult a healthcare professional.
         </div>
-        
+
         <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
             <p>MirageForge v1.0.0 | <a href="/healthz">Health Check</a> | <a href="/docs">API Documentation</a></p>
         </footer>
@@ -154,13 +151,13 @@ async def consent_page(request: Request):
     </head>
     <body>
         <h1>Informed Consent</h1>
-        
+
         <div class="consent-box">
             <h2>About This Experiment</h2>
             <p>You are invited to participate in a visual perception experiment.
             During this experiment, you will view various visual patterns and answer questions
             about what you see.</p>
-            
+
             <h3>What to Expect</h3>
             <ul>
                 <li>The experiment takes approximately 5-10 minutes</li>
@@ -168,7 +165,7 @@ async def consent_page(request: Request):
                 <li>You will answer questions about your perception</li>
                 <li>Your responses will be recorded anonymously</li>
             </ul>
-            
+
             <h3>Your Rights</h3>
             <ul>
                 <li>Participation is completely voluntary</li>
@@ -176,16 +173,16 @@ async def consent_page(request: Request):
                 <li>Your data is anonymous - we do not collect personal information</li>
                 <li>You must be 18 or older to participate</li>
             </ul>
-            
+
             <h3>Risks</h3>
             <p>Some visual patterns may cause mild visual discomfort.
             If you experience any discomfort, please stop immediately and look away from the screen.</p>
-            
+
             <h3>Important</h3>
             <p><strong>This is NOT a medical test.</strong> It does not diagnose any conditions.
             If you have concerns about your vision, please consult a healthcare professional.</p>
         </div>
-        
+
         <form id="consentForm" action="/api/session" method="post">
             <div class="checkbox-group">
                 <label>
@@ -205,31 +202,31 @@ async def consent_page(request: Request):
                     I consent to participate in this experiment
                 </label>
             </div>
-            
+
             <button type="submit" class="button" id="startButton" disabled>Start Experiment</button>
             <a href="/" class="button" style="background: #6c757d;">Cancel</a>
         </form>
-        
+
         <script>
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
             const startButton = document.getElementById('startButton');
-            
+
             function checkAllChecked() {
                 const allChecked = Array.from(checkboxes).every(cb => cb.checked);
                 startButton.disabled = !allChecked;
             }
-            
+
             checkboxes.forEach(cb => cb.addEventListener('change', checkAllChecked));
-            
+
             document.getElementById('consentForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const response = await fetch('/api/session', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({study_id: 1, consent_version: '1.0.0'})
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     window.location.href = `/experiment?session=${data.id}`;
@@ -274,7 +271,7 @@ async def experiment_page(request: Request, session: str):
             <div class="progress-bar" id="progressBar" style="width: 0%"></div>
         </div>
         <p id="progressText">Trial 0 of 12</p>
-        
+
         <div id="trialContainer">
             <div class="stimulus">
                 <img id="stimulusImage" src="" alt="Visual stimulus">
@@ -282,43 +279,43 @@ async def experiment_page(request: Request, session: str):
             <div class="question" id="questionText"></div>
             <div class="options" id="optionsContainer"></div>
         </div>
-        
+
         <button class="option-button stop-button" onclick="stopExperiment()">Stop Experiment</button>
-        
+
         <script>
             const sessionId = '{session}';
             let currentTrial = null;
             let trialCount = 0;
             const totalTrials = 12;
             let trialStartTime = null;
-            
+
             async function loadNextTrial() {{
                 const response = await fetch('/api/trial', {{
                     method: 'POST',
                     headers: {{'Content-Type': 'application/json'}},
                     body: JSON.stringify({{session_id: sessionId}})
                 }});
-                
+
                 if (!response.ok) {{
                     window.location.href = '/debrief?session=' + sessionId;
                     return;
                 }}
-                
+
                 currentTrial = await response.json();
                 trialCount++;
-                
+
                 // Update progress
                 const progress = (trialCount / totalTrials) * 100;
                 document.getElementById('progressBar').style.width = progress + '%';
                 document.getElementById('progressText').textContent = `Trial ${{trialCount}} of ${{totalTrials}}`;
-                
+
                 // Display trial
                 document.getElementById('stimulusImage').src = '/static/stimuli/' + currentTrial.stimulus.image_path.split('/').pop();
                 document.getElementById('questionText').textContent = currentTrial.stimulus.task_spec.question;
-                
+
                 const optionsContainer = document.getElementById('optionsContainer');
                 optionsContainer.innerHTML = '';
-                
+
                 const options = Object.keys(currentTrial.option_order);
                 options.forEach(option => {{
                     const button = document.createElement('button');
@@ -327,13 +324,13 @@ async def experiment_page(request: Request, session: str):
                     button.onclick = () => submitResponse(option);
                     optionsContainer.appendChild(button);
                 }});
-                
+
                 trialStartTime = Date.now();
             }}
-            
+
             async function submitResponse(choice) {{
                 const reactionTime = Date.now() - trialStartTime;
-                
+
                 await fetch('/api/response', {{
                     method: 'POST',
                     headers: {{'Content-Type': 'application/json'}},
@@ -343,7 +340,7 @@ async def experiment_page(request: Request, session: str):
                         reaction_time_ms: reactionTime
                     }})
                 }});
-                
+
                 if (trialCount >= totalTrials) {{
                     await fetch('/api/complete', {{
                         method: 'POST',
@@ -355,13 +352,13 @@ async def experiment_page(request: Request, session: str):
                     loadNextTrial();
                 }}
             }}
-            
+
             async function stopExperiment() {{
                 if (confirm('Are you sure you want to stop the experiment?')) {{
                     window.location.href = '/debrief?session=' + sessionId;
                 }}
             }}
-            
+
             // Start first trial
             loadNextTrial();
         </script>
@@ -372,7 +369,7 @@ async def experiment_page(request: Request, session: str):
 
 
 @app.get("/debrief", response_class=HTMLResponse)
-async def debrief_page(request: Request, session: Optional[str] = None):
+async def debrief_page(request: Request, session: str | None = None):
     """Debrief page after experiment."""
     html_content = """
     <!DOCTYPE html>
@@ -389,18 +386,18 @@ async def debrief_page(request: Request, session: Optional[str] = None):
     </head>
     <body>
         <h1>Thank You!</h1>
-        
+
         <div class="success">
             <h2>Experiment Complete</h2>
             <p>Thank you for participating in this visual perception experiment.
             Your anonymous responses have been recorded.</p>
         </div>
-        
+
         <h2>What Was This About?</h2>
         <p>This experiment studied visual perception using various visual patterns.
         The goal is to understand how humans perceive visual stimuli and to compare
         human perception with computer vision models.</p>
-        
+
         <div class="info">
             <h3>Important Notes</h3>
             <ul>
@@ -409,11 +406,11 @@ async def debrief_page(request: Request, session: Optional[str] = None):
                 <li>Results from this experiment contribute to research on visual perception.</li>
             </ul>
         </div>
-        
+
         <h2>Learn More</h2>
         <p><a href="/gallery">View the gallery</a> to see candidate stimuli from our research.</p>
         <p><a href="/dashboard">View the dashboard</a> to see aggregate statistics.</p>
-        
+
         <p><a href="/">Return to home page</a></p>
     </body>
     </html>
@@ -470,7 +467,7 @@ async def dashboard_page(request: Request):
     <body>
         <h1>Dashboard</h1>
         <p>Aggregate statistics from experiments (anonymous data only).</p>
-        
+
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-value">-</div>
@@ -485,7 +482,7 @@ async def dashboard_page(request: Request):
                 <div class="stat-label">Total Responses</div>
             </div>
         </div>
-        
+
         <p><em>Statistics will appear after experiments are conducted.</em></p>
         <p><a href="/">Return to home</a></p>
     </body>
@@ -510,7 +507,7 @@ async def health_check():
 async def create_session(session_data: SessionCreate):
     """Create a new experiment session."""
     from mirageforge.experiment.service import ExperimentService
-    
+
     with get_db_global() as db:
         service = ExperimentService(db)
         session = service.create_session(session_data)
@@ -521,21 +518,21 @@ async def create_session(session_data: SessionCreate):
 async def get_next_trial(request: Request):
     """Get next trial for session."""
     from mirageforge.experiment.service import ExperimentService
-    
+
     data = await request.json()
     session_id = data.get("session_id")
-    
+
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    
+
     with get_db_global() as db:
         service = ExperimentService(db)
         config = ExperimentConfig(study_id=1, trials_count=12)
         trial = service.get_next_trial(session_id, config)
-        
+
         if trial is None:
             raise HTTPException(status_code=404, detail="No more trials")
-        
+
         return trial.model_dump()
 
 
@@ -543,7 +540,7 @@ async def get_next_trial(request: Request):
 async def record_response(response_data: ResponseCreate):
     """Record a response to a trial."""
     from mirageforge.experiment.service import ExperimentService
-    
+
     with get_db_global() as db:
         service = ExperimentService(db)
         service.record_response(response_data)
@@ -554,13 +551,13 @@ async def record_response(response_data: ResponseCreate):
 async def complete_session(request: Request):
     """Complete a session."""
     from mirageforge.experiment.service import ExperimentService
-    
+
     data = await request.json()
     session_id = data.get("session_id")
-    
+
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    
+
     with get_db_global() as db:
         service = ExperimentService(db)
         session = service.complete_session(session_id)

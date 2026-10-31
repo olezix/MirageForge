@@ -4,7 +4,6 @@ Generator for size context stimuli (Ebbinghaus-like).
 Generates parameterized stimuli that test size perception in context.
 """
 
-from typing import Optional
 
 import numpy as np
 
@@ -26,36 +25,36 @@ def generate_size_context_stimuli(
 ) -> list[StimulusSpec]:
     """
     Generate random size context stimuli.
-    
+
     Args:
         count: Number of stimuli to generate
         base_seed: Base random seed
         target_size_range: Range for target circle size
         context_size_range: Range for context circle size
-        
+
     Returns:
         List of StimulusSpec objects
     """
     rng = np.random.default_rng(base_seed)
     stimuli: list[StimulusSpec] = []
-    
+
     for i in range(count):
         seed = base_seed + i + 1
-        
+
         # Generate parameters
         target_size = float(rng.uniform(*target_size_range))
         context_size = float(rng.uniform(*context_size_range))
-        
+
         # Ensure context doesn't overlap with target
         min_distance = (target_size + context_size) / 2 + 20
         context_distance = float(rng.uniform(min_distance, min(min_distance + 100, 350)))
-        
+
         num_context = int(rng.integers(4, 9))
-        
+
         # Random colors
         colors = ["#808080", "#A0A0A0", "#606060", "#707070"]
         context_color = rng.choice(colors)
-        
+
         params = SizeContextParams(
             target_size=target_size,
             context_size=context_size,
@@ -65,7 +64,7 @@ def generate_size_context_stimuli(
             target_color="#000000",
             background_color="#FFFFFF",
         )
-        
+
         # Task: Which circle is larger? (2AFC)
         # In reality both are same size, but context makes them appear different
         task = TaskSpec(
@@ -74,13 +73,13 @@ def generate_size_context_stimuli(
             correct_answer=None,  # No correct answer in illusion
             question="Which circle appears larger?",
         )
-        
+
         safety = SafetyFlags(
             has_flashing=False,
             has_fast_motion=False,
             has_high_contrast=False,
         )
-        
+
         spec = StimulusSpec(
             family=StimulusFamily.SIZE_CONTEXT,
             params=params,
@@ -88,7 +87,7 @@ def generate_size_context_stimuli(
             seed=seed,
             safety=safety,
         )
-        
+
         stimuli.append(spec)
-    
+
     return stimuli

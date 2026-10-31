@@ -6,7 +6,7 @@ data structures used in the application.
 """
 
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -27,11 +27,11 @@ class StudyCreate(StudyBase):
 
 class StudyUpdate(BaseModel):
     """Schema for updating a Study."""
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    version: Optional[str] = Field(None, max_length=50)
-    consent_text: Optional[str] = Field(None, min_length=10)
-    active: Optional[bool] = None
-    config: Optional[dict[str, Any]] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    version: str | None = Field(None, max_length=50)
+    consent_text: str | None = Field(None, min_length=10)
+    active: bool | None = None
+    config: dict[str, Any] | None = None
 
 
 class StudyResponse(StudyBase):
@@ -49,19 +49,19 @@ class StimulusBase(BaseModel):
     params: dict[str, Any] = Field(...)
     seed: int = Field(..., ge=0)
     task_spec: dict[str, Any] = Field(...)
-    intended_effect: Optional[str] = None
+    intended_effect: str | None = None
     safety_flags: dict[str, Any] = Field(default_factory=dict)
 
 
 class StimulusCreate(StimulusBase):
     """Schema for creating a Stimulus."""
-    study_id: Optional[int] = None
+    study_id: int | None = None
 
 
 class StimulusResponse(StimulusBase):
     """Schema for Stimulus response."""
     id: int
-    study_id: Optional[int]
+    study_id: int | None
     image_path: str
     sha256: str
     created_at: datetime
@@ -82,7 +82,7 @@ class SessionResponse(BaseModel):
     consent_version: str
     status: str
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -114,7 +114,7 @@ class ResponseCreate(BaseModel):
     trial_id: int
     choice: str = Field(..., min_length=1, max_length=100)
     reaction_time_ms: int = Field(..., ge=0, le=300000)  # Max 5 minutes
-    confidence: Optional[int] = Field(None, ge=1, le=10)
+    confidence: int | None = Field(None, ge=1, le=10)
 
     @field_validator("reaction_time_ms")
     @classmethod
@@ -133,7 +133,7 @@ class ResponseResponse(BaseModel):
     trial_id: int
     choice: str
     reaction_time_ms: int
-    confidence: Optional[int]
+    confidence: int | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -219,6 +219,6 @@ class DivergenceMetric(BaseModel):
     family: str
     absolute_difference: float = Field(..., ge=0.0, le=1.0)
     jensen_shannon_divergence: float = Field(..., ge=0.0, le=1.0)
-    p_value: Optional[float] = None
+    p_value: float | None = None
     significant: bool = False
     sample_size: int

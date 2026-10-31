@@ -10,7 +10,7 @@ All models follow privacy-by-design principles:
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -22,7 +22,7 @@ class Base(DeclarativeBase):
 class Study(Base):
     """
     Study configuration for an experiment.
-    
+
     A study defines the parameters, consent text, and configuration for a research experiment.
     Multiple sessions can belong to the same study.
     """
@@ -50,7 +50,7 @@ class Study(Base):
 class Stimulus(Base):
     """
     Visual stimulus with parameterized configuration.
-    
+
     Each stimulus is uniquely identified by its family, parameters, and seed.
     The SHA256 checksum ensures reproducibility and integrity.
     """
@@ -64,7 +64,7 @@ class Stimulus(Base):
     image_path: Mapped[str] = mapped_column(String(500), nullable=False)
     sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     task_spec: Mapped[dict] = mapped_column(JSON, nullable=False)
-    intended_effect: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    intended_effect: Mapped[str | None] = mapped_column(Text, nullable=True)
     safety_flags: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -80,7 +80,7 @@ class Stimulus(Base):
 class Session(Base):
     """
     Anonymous experiment session.
-    
+
     Each session represents one participant's interaction with the experiment.
     Sessions are identified by random UUIDs with no personally identifiable information.
     """
@@ -93,7 +93,7 @@ class Session(Base):
         String(50), default="in_progress", nullable=False
     )  # in_progress, completed, abandoned
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     study: Mapped["Study"] = relationship("Study", back_populates="sessions")
@@ -106,7 +106,7 @@ class Session(Base):
 class Trial(Base):
     """
     Single trial within a session.
-    
+
     A trial presents one stimulus to the participant and records their response.
     """
     __tablename__ = "trials"
@@ -130,7 +130,7 @@ class Trial(Base):
 class Response(Base):
     """
     Participant's response to a trial.
-    
+
     Records the choice, reaction time, and optional confidence rating.
     No personally identifiable information is stored.
     """
@@ -140,7 +140,7 @@ class Response(Base):
     trial_id: Mapped[int] = mapped_column(Integer, ForeignKey("trials.id"), nullable=False, unique=True)
     choice: Mapped[str] = mapped_column(String(100), nullable=False)
     reaction_time_ms: Mapped[int] = mapped_column(Integer, nullable=False)
-    confidence: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Optional confidence rating
+    confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Optional confidence rating
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -153,7 +153,7 @@ class Response(Base):
 class ModelRun(Base):
     """
     Vision model prediction for a stimulus.
-    
+
     Records the model's scores/predictions for a given stimulus.
     Used to compare with human responses and identify divergence.
     """
@@ -177,7 +177,7 @@ class ModelRun(Base):
 class AuditEvent(Base):
     """
     Audit log for system events.
-    
+
     Records important system events without storing personally identifiable information.
     Used for debugging and compliance.
     """
